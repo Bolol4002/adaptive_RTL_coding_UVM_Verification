@@ -1,7 +1,3 @@
-//=============================================================================
-// UVM Testbench: tb_adaptive_control_unit
-// Description: UVM-based verification environment for Adaptive Control Unit
-//=============================================================================
 
 `timescale 1ns / 1ps
 `include "uvm_macros.svh"
