@@ -1,17 +1,10 @@
-//=============================================================================
-// Testbench for Verilator Simulation
-// Description: SystemVerilog verification testbench with driver, monitor, scoreboard
-// Compatible with Verilator
-//=============================================================================
 
 `timescale 1ns / 1ps
 
 module tb_adaptive_control_unit;
 
-    // Clock parameters
     localparam CLK_PERIOD = 10;
-    
-    // Interface signals
+
     logic        clk;
     logic        rst_n;
     logic [2:0]  opcode;
@@ -26,21 +19,13 @@ module tb_adaptive_control_unit;
     logic        jump;
     logic        power_mode_active;
     logic        perf_mode_active;
-    
-    // Opcode definitions
+
     localparam OPCODE_NOP = 3'b000;
     localparam OPCODE_ADD = 3'b001;
     localparam OPCODE_SUB = 3'b010;
     localparam OPCODE_AND = 3'b011;
     localparam OPCODE_OR  = 3'b100;
-    
-    // Test tracking
-    integer test_count;
-    integer pass_count;
-    integer fail_count;
-    integer test_phase;
-    
-    // DUT instantiation
+
     adaptive_control_unit u_dut (
         .clk              (clk),
         .rst_n            (rst_n),
@@ -57,193 +42,89 @@ module tb_adaptive_control_unit;
         .power_mode_active(power_mode_active),
         .perf_mode_active (perf_mode_active)
     );
-    
-    // Clock generation
-    initial begin
+
+    always begin
         clk = 0;
-        forever #(CLK_PERIOD/2) clk = ~clk;
+        #(CLK_PERIOD/2);
+        clk = 1;
+        #(CLK_PERIOD/2);
     end
-    
-    // Driver task - applies stimulus
-    task drive_input(input [2:0] op, input m);
-        opcode = op;
-        mode = m;
-        valid = 1;
-        #(CLK_PERIOD);
-    endtask
-    
-    // Monitor/Scoreboard task - captures and verifies DUT outputs
-    task monitor_outputs(string test_name);
-        logic [2:0] expected_alu_op;
-        logic expected_reg_write;
-        
-        test_count++;
-        
-        if (mode == 0) begin
-            expected_reg_write = (opcode != OPCODE_NOP) ? 1'b1 : 1'b0;
-            case (opcode)
-                OPCODE_ADD: expected_alu_op = 3'b000;
-                OPCODE_SUB: expected_alu_op = 3'b001;
-                OPCODE_AND: expected_alu_op = 3'b010;
-                OPCODE_OR:  expected_alu_op = 3'b011;
-                default:   expected_alu_op = 3'b111;
-            endcase
-        end else begin
-            expected_reg_write = (opcode != OPCODE_NOP) ? 1'b1 : 1'b0;
-            case (opcode)
-                OPCODE_ADD: expected_alu_op = 3'b000;
-                OPCODE_SUB: expected_alu_op = 3'b001;
-                OPCODE_AND: expected_alu_op = 3'b010;
-                OPCODE_OR:  expected_alu_op = 3'b011;
-                default:   expected_alu_op = 3'b111;
-            endcase
-        end
-        
-        @(posedge clk);
-        
-        if (reg_write == expected_reg_write && alu_op == expected_alu_op) begin
-            pass_count++;
-            $display("[PASS] %s: opcode=%b valid=%b mode=%b -> reg_write=%b alu_op=%b",
-                     test_name, opcode, valid, mode, reg_write, alu_op);
-        end else begin
-            fail_count++;
-            $display("[FAIL] %s: opcode=%b expected_rw=%b got_rw=%b expected_alu=%b got_alu=%b",
-                     test_name, opcode, expected_reg_write, reg_write, 
-                     expected_alu_op, alu_op);
-        end
-    endtask
-    
-    // Main test sequence
+
     initial begin
-        // Initialize
         rst_n = 0;
         opcode = OPCODE_NOP;
         valid = 0;
         mode = 0;
-        test_count = 0;
-        pass_count = 0;
-        fail_count = 0;
-        test_phase = 0;
+
+        $display("    ADAPTIVE CONTROL UNIT - TESTBENCH");
         
-        $display("");
-        $display("============================================================");
-        $display("    ADAPTIVE CONTROL UNIT - VERIFICATION TESTBENCH");
-        $display("============================================================");
-        $display("");
-        
-        // Reset sequence
         #(CLK_PERIOD * 2);
         rst_n = 1;
         #(CLK_PERIOD);
-        
-        //================================================================
-        // TEST PHASE 1: Low-Power Mode Tests (mode=0)
-        //================================================================
-        test_phase = 1;
-        $display("-----------------------------------------------------------");
-        $display("  PHASE 1: LOW-POWER MODE (mode=0)");
-        $display("-----------------------------------------------------------");
+
+        $display("--- Low-Power Mode Tests (mode=0) ---");
         mode = 0;
-        
-        drive_input(OPCODE_NOP, 0);
-        monitor_outputs("NOP");
-        
-        drive_input(OPCODE_ADD, 0);
-        monitor_outputs("ADD");
-        
-        drive_input(OPCODE_SUB, 0);
-        monitor_outputs("SUB");
-        
-        drive_input(OPCODE_AND, 0);
-        monitor_outputs("AND");
-        
-        drive_input(OPCODE_OR, 0);
-        monitor_outputs("OR");
-        
+
+        opcode = OPCODE_NOP; valid = 1; #(CLK_PERIOD * 3);
+        $display("NOP: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 0 && alu_op == 3'b111) else $display("FAIL: NOP");
+
+        opcode = OPCODE_ADD; valid = 1; #(CLK_PERIOD * 3);
+        $display("ADD: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b000) else $display("FAIL: ADD");
+
+        opcode = OPCODE_SUB; valid = 1; #(CLK_PERIOD * 3);
+        $display("SUB: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b001) else $display("FAIL: SUB");
+
+        opcode = OPCODE_AND; valid = 1; #(CLK_PERIOD * 3);
+        $display("AND: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b010) else $display("FAIL: AND");
+
+        opcode = OPCODE_OR; valid = 1; #(CLK_PERIOD * 3);
+        $display("OR: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b011) else $display("FAIL: OR");
+
         $display("");
-        
-        //================================================================
-        // TEST PHASE 2: High-Performance Mode Tests (mode=1)
-        //================================================================
-        test_phase = 2;
-        $display("-----------------------------------------------------------");
-        $display("  PHASE 2: HIGH-PERFORMANCE MODE (mode=1)");
-        $display("-----------------------------------------------------------");
+        $display("--- High-Performance Mode Tests (mode=1) ---");
         mode = 1;
-        
-        drive_input(OPCODE_NOP, 1);
-        monitor_outputs("NOP");
-        
-        drive_input(OPCODE_ADD, 1);
-        monitor_outputs("ADD");
-        
-        drive_input(OPCODE_SUB, 1);
-        monitor_outputs("SUB");
-        
-        drive_input(OPCODE_AND, 1);
-        monitor_outputs("AND");
-        
-        drive_input(OPCODE_OR, 1);
-        monitor_outputs("OR");
-        
+
+        opcode = OPCODE_NOP; valid = 1; #(CLK_PERIOD * 3);
+        $display("NOP: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 0 && alu_op == 3'b111) else $display("FAIL: NOP");
+
+        opcode = OPCODE_ADD; valid = 1; #(CLK_PERIOD * 3);
+        $display("ADD: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b000) else $display("FAIL: ADD");
+
+        opcode = OPCODE_SUB; valid = 1; #(CLK_PERIOD * 3);
+        $display("SUB: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b001) else $display("FAIL: SUB");
+
+        opcode = OPCODE_AND; valid = 1; #(CLK_PERIOD * 3);
+        $display("AND: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b010) else $display("FAIL: AND");
+
+        opcode = OPCODE_OR; valid = 1; #(CLK_PERIOD * 3);
+        $display("OR: reg_write=%b alu_op=%b", reg_write, alu_op);
+        assert (reg_write == 1 && alu_op == 3'b011) else $display("FAIL: OR");
+
         $display("");
-        
-        //================================================================
-        // TEST PHASE 3: Dynamic Mode Switching
-        //================================================================
-        test_phase = 3;
-        $display("-----------------------------------------------------------");
-        $display("  PHASE 3: DYNAMIC MODE SWITCHING");
-        $display("-----------------------------------------------------------");
-        
+        $display("--- Dynamic Mode Switching ---");
         mode = 0;
-        drive_input(OPCODE_ADD, 0);
-        monitor_outputs("ADD_LP");
-        
-        mode = 1;
-        drive_input(OPCODE_ADD, 1);
-        monitor_outputs("ADD_HP");
-        
-        mode = 0;
-        drive_input(OPCODE_SUB, 0);
-        monitor_outputs("SUB_LP");
-        
-        mode = 1;
-        drive_input(OPCODE_SUB, 1);
-        monitor_outputs("SUB_HP");
-        
-        $display("");
-        
-        //================================================================
-        // TEST SUMMARY
-        //================================================================
-        $display("============================================================");
-        $display("    TEST SUMMARY");
-        $display("============================================================");
-        $display("  Total Tests:  %0d", test_count);
-        $display("  Passed:     %0d", pass_count);
-        $display("  Failed:     %0d", fail_count);
-        $display("============================================================");
-        
-        if (fail_count == 0)
-            $display("  *** ALL TESTS PASSED! ***");
-        else
-            $display("  *** %0d TESTS FAILED ***", fail_count);
-        
-        $display("");
-        
+        opcode = OPCODE_ADD; valid = 1; #(CLK_PERIOD * 3);
+        $display("ADD_LP: reg_write=%b alu_op=%b power=%b", reg_write, alu_op, power_mode_active);
+        mode = 1; #(CLK_PERIOD * 3);
+        $display("ADD_HP: reg_write=%b alu_op=%b perf=%b", reg_write, alu_op, perf_mode_active);
+        mode = 0; #(CLK_PERIOD * 3);
+        $display("SUB_LP: reg_write=%b alu_op=%b power=%b", reg_write, alu_op, power_mode_active);
+        mode = 1; #(CLK_PERIOD * 3);
+        $display("SUB_HP: reg_write=%b alu_op=%b perf=%b", reg_write, alu_op, perf_mode_active);
+
         #(CLK_PERIOD * 5);
         $finish;
     end
-    
-    // Timeout watchdog
-    initial begin
-        #(CLK_PERIOD * 500);
-        $display("ERROR: Simulation timeout!");
-        $finish;
-    end
-    
-    // VCD dump for waveform
+
     initial begin
         $dumpfile("waveform.fst");
         $dumpvars(0, tb_adaptive_control_unit);

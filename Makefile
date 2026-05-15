@@ -1,5 +1,5 @@
 #=============================================================================
-# Makefile for Adaptive Control Unit Verification
+# Makefile for Adaptive Control Unit
 # Supports Verilator simulation and GTKWave waveform viewing
 #=============================================================================
 
@@ -23,27 +23,12 @@ CYAN = \033[0;36m
 NC = \033[0m
 
 # Targets
-.PHONY: all sim wave clean lint help comp run
+.PHONY: all sim gtk clean help
 
-all: sim
-
-help:
-	@echo ""
-	@echo "==========================================================="
-	@echo "   Adaptive Control Unit - Makefile Commands"
-	@echo "==========================================================="
-	@echo ""
-	@echo "  make sim    - Build and compile testbench"
-	@echo "  make run    - Run simulation"
-	@echo "  make wave   - Open GTKWave with waveform"
-	@echo "  make clean  - Clean build files"
-	@echo "  make help   - Show this help message"
-	@echo "  make comp   - Full flow: compile + run + view"
-	@echo ""
-	@echo "==========================================================="
+all: sim run
 
 sim:
-	@echo "$(BLUE)Compiling testbench with Verilator...$(NC)"
+	@echo "$(BLUE)Compiling design and testbench with Verilator...$(NC)"
 	@mkdir -p $(WORK_DIR)
 	$(VERILATOR) -I$(SRC_DIR) -I$(TB_DIR) --cc $(SRC_DIR)/top_adaptive_control.sv \
 		$(TB_DIR)/tb_adaptive_verilator.sv \
@@ -61,27 +46,35 @@ sim:
 	@cd $(WORK_DIR) && make -f Vtop_adaptive_control.mk -j4
 	@echo "$(GREEN)Build complete!$(NC)"
 
-run:
+run: sim
 	@echo "$(CYAN)Running simulation...$(NC)"
-	@if [ -f $(WORK_DIR)/Vtop_adaptive_control ]; then \
-		cd $(WORK_DIR) && ./Vtop_adaptive_control; \
-	else \
-		echo "$(YELLOW)No binary found. Run 'make sim' first.$(NC)"; \
-	fi
+	@cd $(WORK_DIR) && ./Vtop_adaptive_control
 	@echo "$(GREEN)Simulation completed!$(NC)"
 
-wave: 
+gtk:
 	@echo "$(BLUE)Opening GTKWave...$(NC)"
 	@if [ -f $(WORK_DIR)/$(FST_FILE) ]; then \
 		gtkwave $(WORK_DIR)/$(FST_FILE); \
 	else \
-		echo "$(YELLOW)No waveform file found. Run 'make run' first.$(NC)"; \
+		echo "$(YELLOW)No waveform file found. Run 'make' first.$(NC)"; \
 	fi
-
-comp: sim run wave
 
 clean:
 	@echo "$(YELLOW)Cleaning build files...$(NC)"
 	@rm -rf $(WORK_DIR)
-	@rm -f $(VCD_FILE) $(FST_FILE)
 	@echo "$(GREEN)Clean complete!$(NC)"
+
+help:
+	@echo ""
+	@echo "==========================================================="
+	@echo "   Adaptive Control Unit - Makefile Commands"
+	@echo "==========================================================="
+	@echo ""
+	@echo "  make       - Compile and run simulation (default)"
+	@echo "  make sim   - Compile design and testbench"
+	@echo "  make run   - Run simulation (after sim)"
+	@echo "  make gtk   - Open GTKWave with waveform"
+	@echo "  make clean - Clean build files"
+	@echo "  make help  - Show this help message"
+	@echo ""
+	@echo "==========================================================="
