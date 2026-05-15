@@ -1,18 +1,12 @@
-//=============================================================================
-// Module: low_power_control_unit
-// Description: Minimal Power-Efficient Control Unit with 5 basic opcodes.
-//              Optimized for reduced switching activity.
-//=============================================================================
 
 `timescale 1ns / 1ps
 
 module low_power_control_unit (
     input  logic        clk,
     input  logic        rst_n,
-    input  logic [2:0]  opcode,      // 3-bit opcode for basic 5 instructions
-    input  logic        valid,       // Valid instruction signal
+    input  logic [2:0]  opcode,      
+    input  logic        valid,       
     
-    // Control outputs
     output logic        reg_write,
     output logic        mem_read,
     output logic        mem_write,
@@ -36,7 +30,6 @@ module low_power_control_unit (
     localparam ALU_OR  = 3'b011;
     localparam ALU_NOP = 3'b111;
     
-    // Registered outputs for power efficiency (prevents glitches)
     logic        reg_write_q;
     logic [2:0]  alu_op_q;
 
