@@ -5,8 +5,8 @@ module adaptive_control_unit (
     input  logic        clk,
     input  logic        rst_n,
     input  logic [2:0]  opcode,      
-    input  logic        valid,       // Valid instruction signal
-    input  logic        mode,        // Mode select: 0=Low Power, 1=High Performance
+    input  logic        valid,       
+    input  logic        mode,        
     
     // Control outputs
     output logic        reg_write,
