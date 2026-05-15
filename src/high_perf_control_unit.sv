@@ -29,14 +29,7 @@ module high_perf_control_unit (
     localparam ALU_OR  = 3'b011;
     localparam ALU_NOP = 3'b111;
     
-    logic is_add, is_sub, is  // Control outputs
-    output logic        reg_write,
-    output logic        mem_read,
-    output logic        mem_write,
-    output logic        alu_src,
-    output logic [2:0]  alu_op,
-    output logic        branch,
-    output logic        jump_and, is_or;
+    logic is_add, is_sub, is_and, is_or;
     
     assign is_add = (opcode == OPCODE_ADD);
     assign is_sub = (opcode == OPCODE_SUB);
