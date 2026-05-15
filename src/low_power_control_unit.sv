@@ -70,7 +70,6 @@ module low_power_control_unit (
             endcase
         end
         else begin
-            // Hold values when not valid to reduce switching
             reg_write_q <= 1'b0;
             alu_op_q    <= ALU_NOP;
         end

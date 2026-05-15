@@ -1,8 +1,3 @@
-//=============================================================================
-// Module: high_perf_control_unit
-// Description: Minimal High-Performance Control Unit with 5 basic opcodes.
-//              Optimized for parallel execution and minimum latency.
-//=============================================================================
 
 `timescale 1ns / 1ps
 

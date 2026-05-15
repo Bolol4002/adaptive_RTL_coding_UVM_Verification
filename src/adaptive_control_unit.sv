@@ -1,16 +1,10 @@
-//=============================================================================
-// Module: adaptive_control_unit
-// Description: Adaptive Control Wrapper that dynamically switches between
-//              Power-Efficient and High-Performance control units based on
-//              the mode signal. Demonstrates runtime adaptability mechanism.
-//=============================================================================
 
 `timescale 1ns / 1ps
 
 module adaptive_control_unit (
     input  logic        clk,
     input  logic        rst_n,
-    input  logic [2:0]  opcode,      // 3-bit opcode for minimal 5 instructions
+    input  logic [2:0]  opcode,      
     input  logic        valid,       // Valid instruction signal
     input  logic        mode,        // Mode select: 0=Low Power, 1=High Performance
     
@@ -28,9 +22,6 @@ module adaptive_control_unit (
     output logic        perf_mode_active
 );
 
-    //=========================================================================
-    // Internal signals from both control units
-    //=========================================================================
     
     // Low-Power Control Unit outputs
     logic        lp_reg_write;
@@ -50,9 +41,6 @@ module adaptive_control_unit (
     logic        hp_branch;
     logic        hp_jump;
     
-    //=========================================================================
-    // Instantiate both control units
-    //=========================================================================
     
     // Low-Power Control Unit Instance
     low_power_control_unit u_low_power (
@@ -84,16 +72,12 @@ module adaptive_control_unit (
         .jump       (hp_jump)
     );
     
-    //=========================================================================
     // Adaptive Mode Selection Logic
     // mode = 0: Select Low-Power Control Unit (power-efficient)
     // mode = 1: Select High-Performance Control Unit (speed-optimized)
-    //=========================================================================
     
-    // Output multiplexing based on mode selection
     always_comb begin
         if (mode) begin
-            // High-Performance Mode
             reg_write = hp_reg_write;
             mem_read  = hp_mem_read;
             mem_write = hp_mem_write;
@@ -103,7 +87,6 @@ module adaptive_control_unit (
             jump      = hp_jump;
         end
         else begin
-            // Low-Power Mode
             reg_write = lp_reg_write;
             mem_read  = lp_mem_read;
             mem_write = lp_mem_write;
@@ -114,7 +97,6 @@ module adaptive_control_unit (
         end
     end
     
-    // Mode status outputs for monitoring/debugging
     assign power_mode_active = ~mode;
     assign perf_mode_active  = mode;
 
